@@ -70,7 +70,14 @@
 
             if (process.burstTime === 0) {
               process.completionTime = currentTime;
-              output += `Process ${process.id} - Completion Time: ${process.completionTime} ms\n`;
+              process.turnaroundTime =
+                process.completionTime - process.arrivalTime;
+              process.waitingTime =
+                process.turnaroundTime - process.originalBurstTime;
+
+              output += `Process ${process.id} - Completion Time: ${process.completionTime} ms, `;
+              output += `Turnaround Time: ${process.turnaroundTime} ms, `;
+              output += `Waiting Time: ${process.waitingTime} ms\n`;
             } else {
               queue.push(process); // Add back to the queue if not completed
             }
@@ -82,15 +89,11 @@
         }
 
         const totalTurnaroundTime = processes.reduce(
-          (sum, process) => sum + process.completionTime - process.arrivalTime,
+          (sum, process) => sum + process.turnaroundTime,
           0
         );
         const totalWaitingTime = processes.reduce(
-          (sum, process) =>
-            sum +
-            process.completionTime -
-            process.arrivalTime -
-            process.originalBurstTime,
+          (sum, process) => sum + process.waitingTime,
           0
         );
 
@@ -158,6 +161,8 @@
             burstTime: parseInt(burstTimeInput),
             originalBurstTime: parseInt(burstTimeInput),
             completionTime: 0,
+            turnaroundTime: 0,
+            waitingTime: 0,
           });
         }
 
