@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>FCFS CPU Scheduling Simulation</title>
+    <link rel="stylesheet" type="text/css" href="css/style.css" />
+  </head>
+  <body>
+    <nav>
+      <a href="index.html">FCFS Algorithm</a>
+      <a href="html/roundr.html">Round Robin</a>
+      <a href="html/sstf.html">SSTF Algorithm</a>
+    </nav>
+
+    <div id="main-content">
+      <h2>FCFS Algorithm Simulation</h2>
+
+      <div>
+        <label for="numberOfProcesses">Number of Processes (2-9):</label>
+        <input type="number" id="numberOfProcesses" />
+      </div>
+
+      <div id="processInputs">
+        <!-- Process input fields (arrival time and burst time) will be dynamically added here -->
+      </div>
+
+      <div>
+        <button onclick="getUserInput()">Submit</button>
+      </div>
+
+      <div id="result"></div>
+    </div>
+
+    <script>
+      function validateNumberOfProcesses(numberOfProcesses) {
+        return numberOfProcesses >= 2 && numberOfProcesses <= 9;
+      }
+
+      function validateBurstTimeInput(input) {
+        return !isNaN(input) && input >= 0;
+      }
+
+      function validateArrivalTimeInput(input) {
+        return !isNaN(input) && input >= 0;
+      }
+
+      function calculateFCFS(processes) {
+        processes.sort((a, b) => a.arrivalTime - b.arrivalTime);
+
+        let currentTime = 0;
+        let output = "";
+
+        for (let i = 0; i < processes.length; i++) {
+          const process = processes[i];
+
+          // Set completion time
+          process.completionTime =
+            Math.max(currentTime, process.arrivalTime) + process.burstTime;
+
+          // Calculate turnaround time
+          const turnaroundTime = process.completionTime - process.arrivalTime;
+
+          // Calculate waiting time
+          const waitingTime = turnaroundTime - process.burstTime;
+
+          output += `Process ${i + 1} - Waiting Time: ${Math.max(
+            waitingTime,
+            0
+          )} ms, Turnaround Time: ${turnaroundTime} ms\n`;
+
+          // Update current time for the next process
+          currentTime = process.completionTime;
+        }
+
+        const totalWaitingTime = processes.reduce(
+          (sum, process) =>
+            sum +
+            Math.max(
+              process.completionTime - process.arrivalTime - process.burstTime,
+              0
+            ),
+          0
+        );
+        const totalTurnaroundTime = processes.reduce(
+          (sum, process) => sum + process.completionTime - process.arrivalTime,
+          0
+        );
+        const averageWaitingTime = totalWaitingTime / processes.length;
+        const averageTurnaroundTime = totalTurnaroundTime / processes.length;
+
+        output += `\nAverage Waiting Time: ${averageWaitingTime.toFixed(2)} ms`;
+        output += `\nAverage Turnaround Time: ${averageTurnaroundTime.toFixed(
+          2
+        )} ms`;
+
+        const resultDiv = document.getElementById("result");
+        resultDiv.innerText = output;
+        showStartAgainButton();
+      }
+
+      function getUserInput() {
+        const numberOfProcessesField =
+          document.getElementById("numberOfProcesses");
+        const numberOfProcesses = parseInt(numberOfProcessesField.value);
+
+        if (!validateNumberOfProcesses(numberOfProcesses)) {
+          alert("Number of processes should be between 2 and 9!");
+          return;
+        }
+
+        const processes = [];
+        for (let i = 0; i < numberOfProcesses; i++) {
+          let arrivalTimeInput = prompt(
+            `Enter arrival time for Process ${i + 1}:`
+          );
+
+          if (arrivalTimeInput === null) {
+            // User clicked Cancel, exit the input process
+            return;
+          }
+
+          while (
+            !validateArrivalTimeInput(arrivalTimeInput) ||
+            arrivalTimeInput.trim() === ""
+          ) {
+            alert("Please enter a valid non-negative number.");
+            arrivalTimeInput = prompt(
+              `Enter arrival time for Process ${i + 1}:`
+            );
+          }
+
+          let burstTimeInput = prompt(`Enter burst time for Process ${i + 1}:`);
+
+          if (burstTimeInput === null) {
+            // User clicked Cancel, exit the input process
+            return;
+          }
+
+          while (
+            !validateBurstTimeInput(burstTimeInput) ||
+            burstTimeInput.trim() === ""
+          ) {
+            alert("Please enter a valid non-negative number.");
+            burstTimeInput = prompt(`Enter burst time for Process ${i + 1}:`);
+          }
+
+          processes.push({
+            arrivalTime: parseInt(arrivalTimeInput),
+            burstTime: parseInt(burstTimeInput),
+            completionTime: 0, // Added a field for completion time
+          });
+        }
+
+        calculateFCFS(processes);
+      }
+
+      function showStartAgainButton() {
+        // Remove the submit button
+        const submitButton = document.querySelector("#main-content button");
+        submitButton.style.display = "none";
+
+        // Create the Start Again button
+        const startAgainButton = document.createElement("button");
+        startAgainButton.innerText = "Start Again";
+        startAgainButton.onclick = function () {
+          // Clear input fields
+          const numberOfProcessesField =
+            document.getElementById("numberOfProcesses");
+          numberOfProcessesField.value = "";
+
+          // Remove result
+          clearResult();
+
+          // Remove Start Again button
+          startAgainButton.remove();
+
+          // Show the submit button
+          submitButton.style.display = "block";
+        };
+
+        // Add the Start Again button
+        const mainContentDiv = document.getElementById("main-content");
+        mainContentDiv.appendChild(startAgainButton);
+      }
+
+      function clearResult() {
+        const resultDiv = document.getElementById("result");
+        if (resultDiv) {
+          resultDiv.innerText = "";
+        }
+      }
+    </script>
+  </body>
+</html>

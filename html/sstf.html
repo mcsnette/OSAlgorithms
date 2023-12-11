@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SSTF Algorithm Simulation</title>
+    <link rel="stylesheet" type="text/css" href="../css/style.css" />
+  </head>
+
+  <nav>
+    <a href="../index.html">FCFS Algorithm</a>
+    <a href="roundr.html">Round Robin</a>
+    <a href="sstf.html">SSTF Algorithm</a>
+  </nav>
+
+  <body>
+    <h2>SSTF Algorithm Simulation</h2>
+
+    <div>
+      <label for="currentPosition">Current Position:</label>
+      <input type="number" id="currentPosition" />
+    </div>
+
+    <div>
+      <label for="trackSize">Track Size:</label>
+      <input type="number" id="trackSize" />
+    </div>
+
+    <div>
+      <label for="seekRate">Seek Rate (tracks per millisecond):</label>
+      <input type="number" id="seekRate" />
+    </div>
+
+    <div>
+      <label for="numberOfRequests">Number of Requests (1 - 10):</label>
+      <input type="number" id="numberOfRequests" />
+    </div>
+
+    <div id="submitContainer">
+      <button onclick="getUserInput()">Submit</button>
+    </div>
+
+    <script>
+      function validatePositiveNumberInput(input) {
+        return input !== "" && !isNaN(input) && input >= 0;
+      }
+
+      function validateNumberOfRequests(numberOfRequests) {
+        return numberOfRequests >= 1 && numberOfRequests <= 10;
+      }
+
+      function validateRequestInput(input) {
+        return !isNaN(input);
+      }
+
+      function calculateSSTF(currentPosition, trackSize, seekRate, requests) {
+        let totalHeadMovement = 0;
+        let totalSeekTime = 0;
+        let output = "";
+
+        while (requests.length > 0) {
+          let closestRequestIndex = 0;
+          let minSeekTime = Math.abs(currentPosition - requests[0]);
+
+          for (let i = 1; i < requests.length; i++) {
+            const seekTime = Math.abs(currentPosition - requests[i]);
+            if (seekTime < minSeekTime) {
+              minSeekTime = seekTime;
+              closestRequestIndex = i;
+            }
+          }
+
+          const nextRequest = requests.splice(closestRequestIndex, 1)[0];
+          totalHeadMovement += minSeekTime;
+          totalSeekTime += minSeekTime / seekRate;
+          output += `Move to track ${nextRequest} (Seek Time: ${minSeekTime} ms)\n`;
+          currentPosition = nextRequest;
+        }
+
+        output += `\nTotal Head Movement: ${totalHeadMovement} tracks\n`;
+        output += `Total Seek Time: ${totalSeekTime.toFixed(2)} milliseconds`;
+
+        const resultDiv = document.createElement("div");
+        resultDiv.id = "result";
+        resultDiv.innerText = output;
+        document.body.appendChild(resultDiv);
+
+        // Hide the submit button
+        document.getElementById("submitContainer").style.display = "none";
+
+        createTerminateButton();
+      }
+
+      function getUserInput() {
+        const currentPositionField = document.getElementById("currentPosition");
+        const trackSizeField = document.getElementById("trackSize");
+        const seekRateField = document.getElementById("seekRate");
+        const numberOfRequestsField =
+          document.getElementById("numberOfRequests");
+
+        const currentPosition = parseInt(currentPositionField.value);
+        const trackSize = parseInt(trackSizeField.value);
+        const seekRate = parseInt(seekRateField.value);
+        const numberOfRequests = parseInt(numberOfRequestsField.value);
+
+        if (
+          !validatePositiveNumberInput(currentPosition) ||
+          !validatePositiveNumberInput(trackSize) ||
+          !validatePositiveNumberInput(seekRate) ||
+          !validatePositiveNumberInput(numberOfRequests)
+        ) {
+          alert("All fields must be filled with valid positive numbers!");
+          return;
+        }
+
+        if (!validateNumberOfRequests(numberOfRequests)) {
+          alert("Number of requests should be between 1 and 10 only!");
+          return;
+        }
+
+        let requests = [];
+        for (let i = 0; i < numberOfRequests; i++) {
+          let requestInput = prompt(
+            `Enter request ${i + 1} (max ${trackSize}):`
+          );
+
+          if (requestInput === null) {
+            // User clicked Cancel, exit the input process
+            return;
+          }
+
+          while (!validatePositiveNumberInput(requestInput)) {
+            alert("Please enter a valid positive number.");
+            requestInput = prompt(`Enter request ${i + 1} (max ${trackSize}):`);
+          }
+
+          requests.push(parseInt(requestInput));
+        }
+
+        calculateSSTF(currentPosition, trackSize, seekRate, requests);
+      }
+
+      function createTerminateButton() {
+        const terminateButton = document.createElement("button");
+        terminateButton.innerText = "Repeat";
+        terminateButton.onclick = function () {
+          // Clear result and input fields
+          clearResult();
+          clearInputFields();
+          // Show the submit button
+          document.getElementById("submitContainer").style.display = "block";
+          // Remove the terminate button
+          terminateButton.remove();
+        };
+
+        document.body.appendChild(terminateButton);
+      }
+
+      function clearResult() {
+        const resultDiv = document.getElementById("result");
+        if (resultDiv) {
+          resultDiv.remove();
+        }
+      }
+
+      function clearInputFields() {
+        document.getElementById("currentPosition").value = "";
+        document.getElementById("trackSize").value = "";
+        document.getElementById("seekRate").value = "";
+        document.getElementById("numberOfRequests").value = "";
+      }
+    </script>
+  </body>
+</html>

@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Round Robin CPU Scheduling Simulation</title>
+    <link rel="stylesheet" type="text/css" href="../css/style.css" />
+  </head>
+  <body>
+    <nav>
+      <a href="../index.html">FCFS Algorithm</a>
+      <a href="roundr.html">Round Robin</a>
+      <a href="sstf.html">SSTF Algorithm</a>
+    </nav>
+
+    <div id="main-content">
+      <h2>Round Robin Algorithm Simulation</h2>
+
+      <div>
+        <label for="numberOfProcesses">Number of Processes (2-9):</label>
+        <input type="number" id="numberOfProcesses" min="2" max="9" />
+      </div>
+
+      <div id="processInputs">
+        <!-- Process input fields (arrival time, burst time, and time quantum) will be dynamically added here -->
+      </div>
+
+      <div>
+        <button id="submitButton" onclick="getUserInput()">Submit</button>
+      </div>
+
+      <div id="result"></div>
+      <div id="repeatButton" style="display: none">
+        <button onclick="startAgain()">Start Again</button>
+      </div>
+    </div>
+
+    <script>
+      function validateNumberOfProcesses(numberOfProcesses) {
+        return numberOfProcesses >= 2 && numberOfProcesses <= 9;
+      }
+
+      function validateBurstTimeInput(input) {
+        return input.trim() !== "" && !isNaN(input) && parseInt(input) >= 0;
+      }
+
+      function validateArrivalTimeInput(input) {
+        return input.trim() !== "" && !isNaN(input) && parseInt(input) >= 0;
+      }
+
+      function validateTimeQuantumInput(input) {
+        return !isNaN(input) && input > 0;
+      }
+
+      function calculateRoundRobin(processes, timeQuantum) {
+        // Implement the Round Robin algorithm
+        let output = "Round Robin Result:\n";
+        let queue = [...processes];
+        let currentTime = 0;
+
+        while (queue.length > 0) {
+          const process = queue.shift();
+
+          // Check if the process arrived
+          if (process.arrivalTime <= currentTime) {
+            const remainingTime =
+              process.burstTime > timeQuantum ? timeQuantum : process.burstTime;
+            process.burstTime -= remainingTime;
+            currentTime += remainingTime;
+
+            if (process.burstTime === 0) {
+              process.completionTime = currentTime;
+              output += `Process ${process.id} - Completion Time: ${process.completionTime} ms\n`;
+            } else {
+              queue.push(process); // Add back to the queue if not completed
+            }
+          } else {
+            // If the process hasn't arrived yet, push it back to the end of the queue
+            queue.push(process);
+            currentTime++;
+          }
+        }
+
+        const totalTurnaroundTime = processes.reduce(
+          (sum, process) => sum + process.completionTime - process.arrivalTime,
+          0
+        );
+        const totalWaitingTime = processes.reduce(
+          (sum, process) =>
+            sum +
+            process.completionTime -
+            process.arrivalTime -
+            process.originalBurstTime,
+          0
+        );
+
+        const averageTurnaroundTime = totalTurnaroundTime / processes.length;
+        const averageWaitingTime = totalWaitingTime / processes.length;
+
+        output += `\nAverage Turnaround Time: ${averageTurnaroundTime.toFixed(
+          2
+        )} ms`;
+        output += `\nAverage Waiting Time: ${averageWaitingTime.toFixed(2)} ms`;
+
+        const resultDiv = document.getElementById("result");
+        resultDiv.innerText = output;
+
+        // Hide the "Submit" button and show the "Start Again" button
+        const submitButton = document.getElementById("submitButton");
+        const repeatButton = document.getElementById("repeatButton");
+        submitButton.style.display = "none";
+        repeatButton.style.display = "block";
+      }
+
+      function getUserInput() {
+        const numberOfProcessesField =
+          document.getElementById("numberOfProcesses");
+        const numberOfProcesses = parseInt(numberOfProcessesField.value);
+
+        if (!validateNumberOfProcesses(numberOfProcesses)) {
+          alert("Number of processes should be between 2 and 9!");
+          return;
+        }
+
+        const processes = [];
+        for (let i = 0; i < numberOfProcesses; i++) {
+          let arrivalTimeInput = prompt(
+            `Enter arrival time for Process ${i + 1}:`
+          );
+
+          if (arrivalTimeInput === null) {
+            // User clicked Cancel, exit the input process
+            return;
+          }
+
+          while (!validateArrivalTimeInput(arrivalTimeInput)) {
+            alert("Please enter a valid non-negative number.");
+            arrivalTimeInput = prompt(
+              `Enter arrival time for Process ${i + 1}:`
+            );
+          }
+
+          let burstTimeInput = prompt(`Enter burst time for Process ${i + 1}:`);
+
+          if (burstTimeInput === null) {
+            // User clicked Cancel, exit the input process
+            return;
+          }
+
+          while (!validateBurstTimeInput(burstTimeInput)) {
+            alert("Please enter a valid non-negative number.");
+            burstTimeInput = prompt(`Enter burst time for Process ${i + 1}:`);
+          }
+
+          processes.push({
+            id: i + 1,
+            arrivalTime: parseInt(arrivalTimeInput),
+            burstTime: parseInt(burstTimeInput),
+            originalBurstTime: parseInt(burstTimeInput),
+            completionTime: 0,
+          });
+        }
+
+        let timeQuantumInput = prompt(`Enter the time quantum:`);
+
+        if (timeQuantumInput === null) {
+          // User clicked Cancel, exit the input process
+          return;
+        }
+
+        while (!validateTimeQuantumInput(timeQuantumInput)) {
+          alert("Please enter a valid positive number.");
+          timeQuantumInput = prompt(`Enter the time quantum:`);
+        }
+
+        const timeQuantum = parseInt(timeQuantumInput);
+
+        calculateRoundRobin(processes, timeQuantum);
+      }
+
+      function startAgain() {
+        // Clear input fields, result, and hide the "Start Again" button
+        document.getElementById("numberOfProcesses").value = "";
+        document.getElementById("result").innerText = "";
+        document.getElementById("repeatButton").style.display = "none";
+
+        // Show the "Submit" button
+        const submitButton = document.getElementById("submitButton");
+        submitButton.style.display = "block";
+      }
+    </script>
+  </body>
+</html>
